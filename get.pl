@@ -54,30 +54,53 @@ sub start {
 #    }
 #
     #开始处理css和javascript
+#    if ( $tag =~ /^link$/ ) {
+#
+#        if (defined $attr->{'type'} && $attr->{'type'} =~ /text\/css/ ) {
+#            #CSS
+#            #取得CSS的位置
+#            my $css_src = $attr->{'href'};
+#            my $css_url = ''; 
+#            if ($css_src =~ /^http/i ) {
+#                $css_url = $css_src;
+#            } else {
+#                $css_url = $original_url.$css_src;
+#            }
+#
+#            print "CSS url:", $css_url, "\n";
+#            my $file_name = int(rand(300)).'.css';
+#            print "File name is:", $file_name, "\n";
+#            
+#            getstore($css_url, $file_name);
+#            $replace_hash_css{$css_src} = $file_name;
+#
+#        } 
+#    }
+#
 
-    if ( $tag =~ /^link$/ ) {
+    #解析javascript
+    if ( $tag =~ /^script$/ ) {
+        if ( $attr->{'type'} =~ /text\/javascript/ ) {
+            if ( defined $attr->{'src'} ) {
+                my $javascript_src = $attr->{'src'};
+                my $javascript_url = ''; 
+                if ($javascript_src =~ /^http/i ) {
+                    $javascript_url = $javascript_src;
+                } else {
+                    $javascript_url = $original_url.$javascript_src;
+                }
 
-        if (defined $attr->{'type'} && $attr->{'type'} =~ /text\/css/ ) {
-            #CSS
-            
-            #取得CSS的位置
-            my $css_src = $attr->{'href'};
-            my $css_url = ''; 
-            if ($css_src =~ /^http/i ) {
-                $css_url = $css_src;
-            } else {
-                $css_url = $original_url.$css_src;
+                print "Javascript url:", $javascript_url, "\n";
+                my $file_name = int(rand(300)).'.js';
+                print "File name is:", $file_name, "\n";
+                
+                getstore($javascript_url, $file_name);
+                $replace_hash_javascript{$javascript_src} = $file_name;
             }
-
-            print "CSS url:", $css_url, "\n";
-            my $file_name = int(rand(300)).'.css';
-            print "File name is:", $file_name, "\n";
-            
-            getstore($css_url, $file_name);
-            $replace_hash_css{$css_src} = $file_name;
-
-        } 
+        }
     }
+
+
 }
 
 
