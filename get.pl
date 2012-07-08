@@ -7,8 +7,8 @@ use base qw/HTML::Parser/;
 
 #定义替换的hash
 my %replace_hash_img;
-my $replace_hash_css;
-my $replace_hash_javascript;
+my %replace_hash_css;
+my %replace_hash_javascript;
 
 my $get_url = "http://www.jack-wolfskin.com/Home.aspx";
 my $original_url = "http://www.jack-wolfskin.com/";
