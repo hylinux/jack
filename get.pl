@@ -53,7 +53,7 @@ sub start {
 #        }
 #    }
 #
-    #开始处理css和javascript
+#    #开始处理css和javascript
 #    if ( $tag =~ /^link$/ ) {
 #
 #        if (defined $attr->{'type'} && $attr->{'type'} =~ /text\/css/ ) {
@@ -103,10 +103,37 @@ sub start {
 
 }
 
-
 my $p  = new MikeParseHTML;
 $p->parse($content);
 $p->eof;
+
+#解析完成了，但是需要将原页面里的相关内容替换成我们更新后的内容
+
+#处理javascript
+while ( my($key, $value) = each %replace_hash_javascript ) {
+    print "key:", $key, "\n";
+    print "value:", $value, "\n";
+    $content =~ s/\Q$key\E/$value/gm;
+}
+
+while ( my($key, $value) = each %replace_hash_img ) {
+    print "key:", $key, "\n";
+    print "value:", $value, "\n";
+    $content =~ s/\Q$key\E/$value/gm;
+}
+
+while ( my($key, $value) = each %replace_hash_css ) {
+    print "key:", $key, "\n";
+    print "value:", $value, "\n";
+    $content =~ s/\Q$key\E/$value/gm;
+}
+
+print $content, "\n";
+
+
+
+
+
 
 
 
