@@ -2,8 +2,13 @@
 package MikeParseHTML;
 use strict;
 use utf8;
-use LWP::Simple;
 use base qw/HTML::Parser/;
+
+use LWP::Simple;
+use Cwd;
+use File::Spec;
+use File::Basename;
+use File::Path;
 
 #定义替换的hash
 my %replace_hash_img;
@@ -12,7 +17,6 @@ my %replace_hash_javascript;
 
 my $get_url = "http://www.jack-wolfskin.com/Home.aspx";
 my $write_file = 'home.html';
-
 
 my $original_url = "http://www.jack-wolfskin.com/";
 
@@ -76,13 +80,74 @@ sub start {
                 $css_url = $original_url.$css_src;
             }
 
+            #分拆一下css的url，便于处理css中的图片
+            my @css_split_result = split /\//, $css_url;
+            my $css_url_last_positon =$css_split_result[0];
+            for (my $i=1; $i<$#css_split_result; $i++ ) {
+                $css_url_last_positon = $css_url_last_positon.'/'.$css_split_result[$i];
+            }
+
+            print "CSS file postion is:", $css_url_last_positon, "\n";
+
+
+
             print "CSS url:", $css_url, "\n";
             my $file_name = int(rand(300)).'.css';
             print "File name is:", $file_name, "\n";
-            
-            getstore($css_url, $file_name);
+            my $css_content = get($css_url);
             $replace_hash_css{$css_src} = $file_name;
+            #CSS parser, can get all css image.
+            #定义替换CSS的脚本
+            my %replace_sub_css_content;
+            print "Begin parse the css file:", $file_name, "\n";
+            open(my $fh, "<", \$css_content);
+            while ( my $line = <$fh> ) {
+                if ( $line =~ /background:url\((.*?)\)/ig or 
+                        $line =~ /background-image:url\((.*?)\)/gi ) {
+                    my $image_url = $1;
+                    $image_url =~ s/"//g;
+                    $image_url =~ s/'//g;
 
+
+                    #得到图片的名字
+                    my $image_name = '';
+                    if ( $image_url =~ /^\.\.\// ) {
+                        $image_name = $image_url;
+                        $image_name =~ s/(\.\.\/)+(.*?)/$2/;
+                    } else {
+                        $image_name = $image_url;
+                    }
+                    my $image_abs_url = $css_url_last_positon.'/'.$image_url;
+                    #拉取图片
+                    #如果该图片已经存在，则不拉取
+                    print "Image Name is:", $image_name, "\n";
+                    if ( ! exists($replace_sub_css_content{$image_url} ) ) {
+                        my $really_file_name = File::Spec->catfile(getcwd, $image_name);
+                        print "Save Really File Name is:", $really_file_name, "\n";
+                        #取得目录
+                        my $image_dir_name = dirname($really_file_name);
+                        #如果目录不存在，则创建该目录
+                        if ( !-e $image_dir_name ) {
+                            mkpath($image_dir_name);
+                        }
+                        getstore($image_abs_url, $really_file_name);
+                    }
+                    $replace_sub_css_content{$image_url} = $image_name;
+                }
+            }
+            close $fh;
+
+            #图片已经全部抓取完毕。现在开始替换
+            while ( my($key, $value) = each %replace_sub_css_content ) {
+                print "key:", $key, "\n";
+                print "value:", $value, "\n";
+                $css_content =~ s/\Q$key\E/\Q$value\E/gm;
+            }
+
+            open(my $css_wh, ">:encoding(UTF-8)", $file_name);
+            print $css_wh $css_content;
+            close $css_wh;
+            print "Parser the CSS file $file_name is end\n";
         } 
     }
 
@@ -108,7 +173,6 @@ sub start {
             }
         }
     }
-
 
 }
 
