@@ -10,8 +10,8 @@ my %replace_hash_img;
 my %replace_hash_css;
 my %replace_hash_javascript;
 
-my $get_url = "http://www.jack-wolfskin.com/Home.aspx";
-my $write_file = 'home.html';
+my $get_url = "http://www.jack-wolfskin.com/Company/Brand/brand-with-the-paw.aspx";
+my $write_file = 'brand.html';
 
 
 my $original_url = "http://www.jack-wolfskin.com/";
