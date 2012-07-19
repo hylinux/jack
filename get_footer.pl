@@ -14,6 +14,7 @@ use File::Path;
 my %replace_hash_img;
 my %replace_hash_css;
 my %replace_hash_javascript;
+my %replace_hash_img_javascript;
 
 my $get_url = "http://www.jack-wolfskin.com/Footwear.aspx";
 my $write_file = 'footer.html';
@@ -174,6 +175,45 @@ sub start {
         }
     }
 
+
+    #解析div里的onclick事件，并且拿到图片
+    if ( $tag =~ /^div$/ ) {
+
+        if ( defined  $attr->{'onclick'}  ) {
+
+            if ( $attr->{'onclick'} =~ /^changeImg\((.*?)(\s*)\,(\s*)(.*)\)/gi ) {
+                my $img_url = $4;
+                $img_url =~ s/'//g;
+                $img_url =~ s/"//g;
+
+                if ( ! -e 'prod_img' ) {
+                    mkpath('prod_img');
+                }
+
+                print "the image is in javascript:", $img_url, "\n";
+                my $file_ext = "";
+                if ( $img_url =~ /\.jpg/gi || $img_url =~ /\.jpeg/gi ) {
+                     $file_ext = 'jpg';
+                } elsif ( $img_url =~ /\.gif/gi ) {
+                     $file_ext = 'gif';
+                } elsif ( $img_url =~ /\.png/gi ) {
+                     $file_ext = 'png';
+                } else {
+                    $file_ext = 'jpg';
+                }
+
+                my $file_name = 'prod_img/'.int(rand(300)).'.'.$file_ext;
+
+                if ( ! exists $replace_hash_img_javascript{$img_url} ) {
+                     getstore($img_url, $file_name);
+                     $replace_hash_img_javascript{$img_url} = $file_name;
+                }
+            }
+        }
+    }
+
+
+
 }
 
 my $p  = new MikeParseHTML;
@@ -200,6 +240,14 @@ while ( my($key, $value) = each %replace_hash_css ) {
     print "value:", $value, "\n";
     $content =~ s/\Q$key\E/$value/gm;
 }
+
+while ( my($key, $value) = each %replace_hash_img_javascript ) {
+    print "key:", $key, "\n";
+    print "value:", $value, "\n";
+    $content =~ s/\Q$key\E/$value/gm;
+}
+
+
 
 #写入文件
 open(my $fh, ">:encoding(UTF-8)", $write_file) or die "Can't open file for write";
